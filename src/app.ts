@@ -1,6 +1,7 @@
 import express, { type Express, type RequestHandler } from 'express';
 import { generateCode } from './code.js';
 import { config } from './config.js';
+import { createRateLimiter } from './middleware/rateLimit.js';
 import { LinkStore } from './store/linkStore.js';
 
 export interface CreateAppOptions {
@@ -41,6 +42,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
   const { extraMiddleware = [] } = options;
 
   app.use(express.json());
+  app.use(createRateLimiter());
   if (extraMiddleware.length > 0) {
     app.use(...extraMiddleware);
   }
