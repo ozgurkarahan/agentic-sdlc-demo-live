@@ -1,0 +1,9 @@
+{
+  "unit": "U1",
+  "declaredPaths": ["src/middleware/rateLimit.ts", "src/app.ts", "test/unit/rateLimit.test.ts", ".agent/unit.json"],
+  "requiredTest": "test/unit/rateLimit.test.ts",
+  "evals": ["rate-limit-429"],
+  "evalRoute": "/api/links",
+  "evalMax": 5,
+  "evalMethod": "GET"
+}
