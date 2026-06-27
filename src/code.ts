@@ -8,7 +8,7 @@ function secureRandomIndex(maxExclusive: number): number {
   return randomInt(maxExclusive);
 }
 
-export function generateCode(length = 6, randomIndex: RandomIndex = secureRandomIndex): string {
+export function generateCode(length = 5, randomIndex: RandomIndex = secureRandomIndex): string {
   if (!Number.isInteger(length) || length <= 0) {
     throw new Error('Code length must be a positive integer');
   }
