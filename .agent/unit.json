@@ -1,0 +1,9 @@
+{
+  "unit": "U2",
+  "declaredPaths": ["src/config.ts", "test/unit/config.test.ts", ".agent/unit.json"],
+  "requiredTest": "test/unit/config.test.ts",
+  "evals": [],
+  "evalRoute": "/healthz",
+  "evalMax": 3,
+  "evalMethod": "GET"
+}
