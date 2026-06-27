@@ -1,0 +1,1 @@
+{ "unit": "NEG2", "declaredPaths": ["src/util/noop.ts", "test/unit/noop.test.ts", ".agent/unit.json"], "requiredTest": "test/unit/noop.test.ts", "evals": [] }
