@@ -29,3 +29,5 @@ const app = createApp({ extraMiddleware });
 app.listen(config.port, () => {
   console.log(`URL shortener listening on port ${config.port}`);
 });
+
+// NEG-1 stray edit OUTSIDE declared paths (should trip path-scope)
