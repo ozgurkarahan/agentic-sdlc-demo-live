@@ -34,3 +34,5 @@ npm run lint
 npm run build
 npm test
 ```
+
+<!-- ci: trigger check-run name registration (S2) -->
