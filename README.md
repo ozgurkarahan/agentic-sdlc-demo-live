@@ -1,6 +1,6 @@
 # URL Shortener Sample App
 
-Node 20 + TypeScript + Express REST API used as the demo system under test. This is the **before** state: no rate limiting is implemented yet.
+Node 20 + TypeScript + Express REST API used as the demo system under test.
 
 ## API
 
@@ -17,7 +17,31 @@ Node 20 + TypeScript + Express REST API used as the demo system under test. This
 
 ## Rate limiting
 
-This section is intentionally reserved for a later demo unit. The current app does not include rate limiting.
+The API enforces **per-client** (IP-based) rate limiting on all routes.
+
+### 429 response contract
+
+Once a client exceeds the allowed number of requests within the configured window, every subsequent request in that window receives:
+
+- **HTTP 429 Too Many Requests**
+- `Retry-After: <seconds>` — a numeric value indicating how many seconds the client must wait before retrying
+- `RateLimit-Limit: <max>` — the maximum number of requests allowed per window
+- `RateLimit-Remaining: 0` — the number of requests still allowed in the current window
+
+Requests made *within* the threshold receive a normal `2xx`/`3xx` response with `RateLimit-Remaining` counting down.
+
+### Configuration
+
+| Environment variable | Default | Description |
+|---|---|---|
+| `RATE_LIMIT_MAX` | `100` | Maximum number of requests allowed per client per window |
+| `RATE_LIMIT_WINDOW_MS` | `60000` | Length of the sliding window in milliseconds (default: 1 minute) |
+
+Example — tighten the limit to 10 requests per 30 seconds:
+
+```sh
+RATE_LIMIT_MAX=10 RATE_LIMIT_WINDOW_MS=30000 npm start
+```
 
 ## Run locally
 

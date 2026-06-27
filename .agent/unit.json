@@ -1,7 +1,7 @@
 {
-  "unit": "U2",
-  "declaredPaths": ["src/config.ts", "test/unit/config.test.ts", ".agent/unit.json"],
-  "requiredTest": "test/unit/config.test.ts",
+  "unit": "U3",
+  "declaredPaths": ["README.md", ".agent/unit.json"],
+  "requiredTest": null,
   "evals": [],
   "evalRoute": "/healthz",
   "evalMax": 3,
