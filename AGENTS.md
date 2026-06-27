@@ -1,29 +1,33 @@
-# AGENTS.md — example repo-wide rule file (EXAMPLE — copy to a target repo root)
+# AGENTS.md — repo-wide rule file for the agentic-SDLC demo
 
-> **This is a drop-in EXAMPLE.** It lives under `docs/agentic-engineering-on-github/harness/` so it
-> does **not** govern this demo repo. To use it, copy this file to the **root** of a target repo as
-> `AGENTS.md` and adapt the bracketed parts. It is the **static context** every Copilot coding-agent
-> instance loads — the single highest-leverage harness artifact (`Agent = Model + Harness`).
+> This is the **active** rule file for `ozgurkarahan/agentic-sdlc-demo-live`: it sits at the repo root
+> and is the **static context** every Copilot coding-agent instance loads — the single highest-leverage
+> harness artifact (`Agent = Model + Harness`).
 >
-> **It does not enforce anything by itself.** Real enforcement comes from rulesets, required checks,
-> required reviews, and Environments configured in the target repo (see `README.md` here).
+> **It does not enforce anything by itself.** Real enforcement comes from the repository ruleset,
+> required status checks, required CODEOWNERS review, and Environments configured on this repo.
 
 ---
 
 ## 1. What this repo is
 
-`[One-paragraph description of {{DEMO_APP}} — the service, its boundary, its stack. Example default:
-a small REST API service. Replace with the target repo's real service.]`
+A small **URL-shortener REST API** — the system under test for the agentic-SDLC demo. It creates a
+short code for a URL, redirects by code, and lists links. In-memory store (per-replica), exposed via a
+`createApp()` factory in `src/app.ts`.
 
-- **Stack:** `[language / framework / runtime]`
-- **Run locally:** `[command]`
-- **Test:** `[command]` · **Lint:** `[command]` · **Build:** `[command]`
+- **Stack:** Node 20 · TypeScript · Express.
+- **Run locally:** `npm ci && npm run build && npm start`
+- **Test:** `npm run test:unit` · `npm run test:e2e`  · **Lint:** `npm run lint`  · **Build:** `npm run build`
+- **Routes:** `POST /shorten` (201) · `GET /api/links` (200) · `GET /:code` (302) · `GET /healthz` (200).
+- **App factory:** `createApp(options)` in `src/app.ts` accepts `{ extraMiddleware?: RequestHandler[] }`.
+  Behaviour you add (e.g. a rate limiter) must be wired **into `createApp()` so the app applies it by
+  default** — not only via `extraMiddleware` (that path is for eval harness injection).
 
-## 2. The discipline — Plan → Validate → Execute (non-negotiable)
+## 2. The discipline — Plan -> Validate -> Execute (non-negotiable)
 
 1. **Plan first.** No implementation without an approved plan: Issues with acceptance criteria, a
    Definition of Done, a test/eval strategy, and a dependency graph.
-2. **Validate the plan.** The plan passes a **rubber-duck / devil's-advocate** review **and** a human
+2. **Validate the plan.** The plan passes a **rubber-duck / devil''s-advocate** review **and** a human
    approval **before any code is written**. This is a hard gate.
 3. **Execute** only against a validated, approved plan.
 
@@ -31,12 +35,29 @@ a small REST API service. Replace with the target repo's real service.]`
 
 ## 3. How you (a Development-fleet agent) must work
 
-- You are assigned **exactly one** parallel-safe Issue. Implement **only** that unit.
-- Work on your **own branch**; open **one linked PR** that references the Issue.
-- **Do not touch files owned by another unit.** If you discover a cross-unit dependency, stop and
-  flag it on the Issue — it means the plan needs re-validation, not a workaround.
-- Keep the change minimal and scoped to the Issue's DoD. Do not refactor unrelated code.
-- Ensure your PR's tests **and** evals pass; do not weaken a check to make it green.
+- You are assigned **exactly one** Issue (a work unit). Implement **only** that unit.
+- Work on your **own branch**; open **one linked PR** that references the Issue (e.g. `Closes #N`).
+- **Declare your lane — REQUIRED.** Your PR **MUST** add a file `.agent/unit.json` describing the
+  unit''s scope, so the path-scope + trajectory gates can verify you stayed in bounds and did the
+  declared work. **Copy the fenced ```json agentic-unit``` block from your assigned Issue verbatim
+  into `.agent/unit.json`.** A work-unit PR missing `.agent/unit.json` **fails** path-scope +
+  trajectory by design — it is not optional. Schema:
+  - `unit` — the unit id (e.g. `"U1"`).
+  - `declaredPaths` — every path you may touch (globs ok: `*`, `**`, trailing `/`). **Every changed
+    file must match one of these**, and `.agent/unit.json` is itself listed. Touching another unit''s
+    path -> path-scope RED.
+  - `requiredTest` — the **exact** test file you must add (trajectory checks for this exact path).
+  - `evals`, `evalRoute`, `evalMax`, `evalMethod` — the acceptance-eval contract the rubric runs.
+- **Honor the acceptance contract exactly.** If your Issue''s eval contract declares `rate-limit-429`,
+  the limiter you write **must read the `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW_MS` environment
+  variables** (the eval harness sets them to drive the threshold; default to a safe high max when
+  unset) and be wired into `createApp()` by default, returning **429** past the limit with a numeric
+  **`Retry-After`** and **`RateLimit-Limit`** / **`RateLimit-Remaining`** headers. Add the required
+  test at the **exact** path named in `requiredTest`.
+- **Do not touch files owned by another unit.** If you discover a cross-unit dependency, stop and flag
+  it on the Issue — it means the plan needs re-validation, not a workaround.
+- Keep the change minimal and scoped to the Issue''s DoD. Do not refactor unrelated code.
+- Ensure your PR''s tests **and** evals pass; do not weaken a check to make it green.
 - **Never merge your own PR.** Humans approve via CODEOWNERS / required review.
 
 ## 4. Guardrails — "never do" rules
@@ -49,15 +70,15 @@ a small REST API service. Replace with the target repo's real service.]`
 
 ## 5. Conventions
 
-- **Style:** `[link to style guide / formatter config]`. Match existing code; don't reformat
-  unrelated lines.
-- **Tests:** colocate with `[test convention]`; every behavior change ships with tests **and** evals.
+- **Style:** match existing code (ESLint config in repo); don''t reformat unrelated lines.
+- **Tests:** unit tests live under `test/unit/`, e2e under `test/e2e/` (Vitest + supertest); every
+  behavior change ships with tests **and** evals.
 - **Commits/PRs:** small, focused, linked to an Issue; PR description states what + why + how-verified.
 - **Docs:** update `README` / API reference when behavior or interfaces change.
 
 ## 6. The harness around you (for reference)
 
-| Role | Where it's defined |
+| Role | Where it''s defined |
 |---|---|
 | Orchestrator / Dispatcher | `.github/agents/orchestrator.agent.md` |
 | Planning / Requirements | `.github/agents/planning.agent.md` |
@@ -72,6 +93,6 @@ a small REST API service. Replace with the target repo's real service.]`
 | Security gate | `.github/workflows/security-gate.yml` |
 | Safety overlay | `.github/instructions/agent-safety.instructions.md` |
 
-> 🔒 **IF HIGH-ASSURANCE.** Add: mandatory multi-party plan + release approval; a dedicated
-> Security/Compliance owner; "all security + eval checks green before merge"; stricter rulesets and
-> secret-scanning push protection enforced org-wide.
+> HIGH-ASSURANCE. Add: mandatory multi-party plan + release approval; a dedicated Security/Compliance
+> owner; "all security + eval checks green before merge"; stricter rulesets and secret-scanning push
+> protection enforced org-wide.
