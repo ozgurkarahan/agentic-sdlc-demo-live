@@ -1,0 +1,115 @@
+name: Work Unit
+description: One parallel-safe (or ordered) unit of work for the agentic pipeline. EXAMPLE issue form.
+title: "[unit]: "
+labels: ["agentic-work-unit"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **EXAMPLE issue form** — copy to a target repo's `.github/ISSUE_TEMPLATE/work-unit.yml`.
+        One Issue = one unit. A Development-fleet agent is assigned exactly one of these.
+  - type: textarea
+    id: intent
+    attributes:
+      label: Intent / summary
+      description: What this unit delivers, in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Objective, testable criteria for "this works".
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: Explicit DoD — code, tests, evals, docs, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: test-eval
+    attributes:
+      label: Test + eval strategy
+      description: Which tests prove correctness; which evals prove quality/trajectory.
+    validations:
+      required: true
+  - type: textarea
+    id: declared-paths
+    attributes:
+      label: Declared paths (lane)
+      description: |
+        The ONLY files/globs this unit may touch — one per line. The path-scope gate fails a PR
+        that strays outside this lane. Mirrored into `.agent/unit.json.declaredPaths` on the branch.
+      placeholder: |
+        src/middleware/rateLimit.ts
+        src/app.ts
+    validations:
+      required: true
+  - type: input
+    id: required-test
+    attributes:
+      label: Required test (trajectory)
+      description: |
+        The test file this unit MUST add/modify. The trajectory eval fails if it is absent.
+        Mirrored into `.agent/unit.json.requiredTest`.
+      placeholder: "test/rateLimit.test.ts"
+    validations:
+      required: true
+  - type: input
+    id: acceptance-eval
+    attributes:
+      label: Acceptance eval contract (optional)
+      description: |
+        Deterministic acceptance eval this unit must satisfy, scenario-driven. Format:
+        `name[:route[:max[:method]]]`. For S1 (rate limiting): `rate-limit-429:/api/links:100:GET`.
+        Mirrored into `.agent/unit.json` (`evals`, `evalRoute`, `evalMax`, `evalMethod`). Leave blank
+        for units with no output rubric (e.g. docs/config). The eval then runs UNCONDITIONALLY (R5) —
+        a unit that claims the capability but doesn't deliver it → eval RED (no skip-green).
+      placeholder: "rate-limit-429:/api/links:100:GET"
+    validations:
+      required: false
+  - type: textarea
+    id: e2e-real-results
+    attributes:
+      label: E2E real-results contract (REQUIRED for the end-to-end unit)
+      description: |
+        For the one ordered **end-to-end acceptance unit**, state the observable behaviour the test must
+        assert against the **LIVE deployed URL** (the running system — not a stub/mock), as a post-deploy
+        gate. The Development agent writes the actual test; this is the contract it must meet. For S1:
+        "Against the deployed URL: under the threshold the API returns 200; past the threshold it returns
+        429 with a numeric `Retry-After` and `RateLimit-Limit`/`RateLimit-Remaining` headers." Leave blank
+        for non-E2E units. A plan whose E2E unit leaves this blank — or that only asserts local
+        stubs/mocks — is incomplete and the Rubber-Duck gate should reject it.
+      placeholder: |
+        Against https://<deployed-url>: under threshold -> 200; past threshold -> 429 with
+        a numeric Retry-After and RateLimit-* headers. Test hits the live URL, not a stub.
+    validations:
+      required: false
+  - type: dropdown
+    id: parallel-safe
+    attributes:
+      label: Parallel-safe?
+      description: Can this run concurrently with other units, or must it wait?
+      options:
+        - "Yes — no dependencies on other units"
+        - "No — depends on other units (list below)"
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Issue numbers this unit depends on (leave blank if parallel-safe).
+    validations:
+      required: false
+  - type: input
+    id: model-tier
+    attributes:
+      label: Suggested model tier
+      description: premium (planning/architecture/impl) or cheaper (test/review/monitor).
+      placeholder: "premium | cheaper"
+    validations:
+      required: false
