@@ -99,10 +99,27 @@ jobs:
           FAULT: ${{ (github.event_name == 'workflow_dispatch' && inputs.inject_fault) && '1' || '0' }}
         run: |
           RG="${{ vars.AZURE_RG }}"; APP="${{ vars.STAGING_APP }}"
+          # Unique per-run suffix: a re-dispatch of the SAME commit (e.g. the fault variants) must mint a
+          # FRESH revision with the intended env vars, never collide with / silently reuse an existing one.
+          SUFFIX="sha-$(echo '${{ github.sha }}' | cut -c1-8)-r${{ github.run_id }}"
+          NEW="$APP--$SUFFIX"
           az containerapp ingress update -g "$RG" -n "$APP" --target-port 3000 -o none   # retarget off the seed port (idempotent)
           az containerapp update -g "$RG" -n "$APP" \
             --image "${{ steps.push.outputs.image }}" \
+            --revision-suffix "$SUFFIX" \
             --set-env-vars "FAULT_HEALTHZ=$FAULT" "FAULT_HEALTHZ_PROD=0" -o none
+          # ANTI-STALE-GREEN: `az containerapp update` returns once the control plane accepts the revision,
+          # but ingress keeps serving the PREVIOUS revision until the new one is ready. Smoking immediately
+          # races that rollout and can validate the stale-good revision (false GO). Wait until OUR new
+          # revision is the latest-ready (== the one ingress now serves) BEFORE smoking.
+          echo "Waiting for $NEW to become latestReadyRevisionName before smoke…"
+          for i in $(seq 1 40); do
+            READY="$(az containerapp show -g "$RG" -n "$APP" --query properties.latestReadyRevisionName -o tsv 2>/dev/null || echo '')"
+            echo "  wait $i: latestReady=$READY"
+            [ "$READY" = "$NEW" ] && { echo "Revision $NEW is live + ready."; break; }
+            [ "$i" = "40" ] && { echo "::error::$NEW never became latest-ready"; exit 1; }
+            sleep 5
+          done
           FQDN="$(az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)"
           echo "STAGING_URL=https://$FQDN/healthz" >> "$GITHUB_ENV"
       - name: Live smoke (staging)        # layered — retries cover ACA scale-to-zero cold start
@@ -146,7 +163,10 @@ jobs:
           PROD_FAULT: ${{ (github.event_name == 'workflow_dispatch' && inputs.inject_prod_fault) && '1' || '0' }}
         run: |
           RG="${{ vars.AZURE_RG }}"; APP="${{ vars.PROD_APP }}"
-          SUFFIX="sha-$(echo '${{ github.sha }}' | cut -c1-8)"
+          # Unique per-run suffix (same reason as staging): a re-dispatch of the same commit — exactly the
+          # inject_prod_fault rollback test — must mint a FRESH canary, never collide with the last-good
+          # revision that already carries this SHA.
+          SUFFIX="sha-$(echo '${{ github.sha }}' | cut -c1-8)-r${{ github.run_id }}"
           az containerapp ingress update -g "$RG" -n "$APP" --target-port 3000 -o none   # idempotent retarget off seed
           az containerapp update -g "$RG" -n "$APP" \
             --image "${{ needs.deploy-staging.outputs.image }}" \
