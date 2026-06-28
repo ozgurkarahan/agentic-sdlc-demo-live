@@ -129,14 +129,22 @@ jobs:
       # test/e2e/rateLimit.e2e.test.ts; this step WIRES it as a post-deploy gate vs the LIVE staging URL
       # (after smoke, before promotion). A failing/absent E2E fails deploy-staging => prod untouched.
       - name: E2E real-results acceptance (live staging URL)
+        # The harness-authored test reads TEST_BASE_URL (vitest reserves BASE_URL for Vite's base path,
+        # so a real BASE_URL is shadowed to "/" inside the runner). RATE_LIMIT_MAX must equal the staging
+        # app's configured limit so the test's config-drift guard (limit === expectedLimit) holds.
+        env:
+          RATE_LIMIT_MAX: '50'
         run: |
-          if [ -f test/e2e/rateLimit.e2e.test.ts ]; then
-            echo "Running harness-authored E2E against $STAGING_BASE"
-            E2E_BASE_URL="$STAGING_BASE" npx vitest run test/e2e/rateLimit.e2e.test.ts
-          else
+          if [ ! -f test/e2e/rateLimit.e2e.test.ts ]; then
             echo "::error::Planning demanded a real-results E2E unit (test/e2e/rateLimit.e2e.test.ts) but the Dev fleet has not delivered it — refusing to promote without the live acceptance test."
             exit 1
           fi
+          npm ci
+          export TEST_BASE_URL="$STAGING_BASE"
+          echo "Running harness-authored E2E against $TEST_BASE_URL (expect 200 under $RATE_LIMIT_MAX, then 429 + Retry-After + RateLimit-*)"
+          npx vitest run test/e2e/rateLimit.e2e.test.ts --reporter=json --outputFile=e2e-result.json
+          # ANTI-THEATER skip-guard: a skipped/empty suite exits 0; that must NOT count as a green gate.
+          node -e "const r=require('./e2e-result.json');const p=r.numPassedTests||0,s=r.numPendingTests||0,t=r.numTotalTests||0;console.log('E2E executed: passed='+p+' skipped='+s+' total='+t);if(p<1){console.error('::error::E2E gate did not execute a passing live test (skip!=green) — refusing to promote.');process.exit(1);}"
 
   # ── 3. Deploy PRODUCTION by the SAME digest. Environment reviewer pause → 0% canary → shift → rollback. ──
   deploy-production:
