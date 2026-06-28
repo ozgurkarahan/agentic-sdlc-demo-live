@@ -60,3 +60,6 @@ npm test
 ```
 
 <!-- ci: trigger check-run name registration (S2) -->
+
+<!-- loop3-green-proof: a clean change that should pass Tests & Evals -->
+
