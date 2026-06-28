@@ -6,6 +6,7 @@ Node 20 + TypeScript + Express REST API used as the demo system under test.
 
 - `GET /healthz` → `200 { "status": "ok" }`
 - `POST /shorten` with `{ "url": "https://example.com" }` → `201 { "code": "abc123", "shortUrl": "http://localhost:3000/abc123" }`
+- `POST /shorten` with a URL longer than the configured maximum → `400 { "error": string }`
 - `GET /:code` for a known code → `302` redirect to the original URL and increments `hits`
 - `GET /:code` for an unknown code → `404 { "error": string }`
 - `GET /api/links` → `200` array of `{ "code": string, "url": string, "hits": number }`
@@ -14,6 +15,16 @@ Node 20 + TypeScript + Express REST API used as the demo system under test.
 
 - `PORT` defaults to `3000`
 - `BASE_URL` defaults to `http://localhost:3000`
+- `MAX_URL_LEN` defaults to `2048`
+
+## Input validation
+
+`POST /shorten` accepts only valid `http` and `https` URLs. If the submitted URL exceeds `MAX_URL_LEN`
+(default `2048` characters), the API responds with **HTTP 400** and a JSON error body, for example:
+
+```json
+{ "error": "URL exceeds maximum length of 2048 characters" }
+```
 
 ## Rate limiting
 

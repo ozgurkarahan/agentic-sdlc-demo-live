@@ -1,9 +1,5 @@
 {
-  "unit": "U3",
+  "unit": "U2",
   "declaredPaths": ["README.md", ".agent/unit.json"],
-  "requiredTest": null,
-  "evals": [],
-  "evalRoute": "/healthz",
-  "evalMax": 3,
-  "evalMethod": "GET"
+  "evals": []
 }
