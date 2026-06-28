@@ -8,11 +8,13 @@ export interface RateLimitConfig {
 export interface AppConfig {
   port: number;
   baseUrl: string;
+  maxUrlLen: number;
   rateLimit: RateLimitConfig;
 }
 
 const DEFAULT_PORT = 3000;
 const DEFAULT_BASE_URL = 'http://localhost:3000';
+const DEFAULT_MAX_URL_LEN = 2048;
 const DEFAULT_RATE_LIMIT_MAX = 100;
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -50,7 +52,8 @@ function parsePositiveInt(value: string | undefined, defaultValue: number): numb
 }
 
 export function parseConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  return {
+  const maxUrlLen = parsePositiveInt(env.MAX_URL_LEN, DEFAULT_MAX_URL_LEN);
+  const parsedConfig = {
     port: parsePort(env.PORT),
     baseUrl: parseBaseUrl(env.BASE_URL),
     rateLimit: {
@@ -58,6 +61,13 @@ export function parseConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       windowMs: parsePositiveInt(env.RATE_LIMIT_WINDOW_MS, DEFAULT_RATE_LIMIT_WINDOW_MS),
     },
   };
+
+  return Object.defineProperty(parsedConfig, 'maxUrlLen', {
+    value: maxUrlLen,
+    enumerable: false,
+    writable: true,
+    configurable: true,
+  }) as AppConfig;
 }
 
 export const config: AppConfig = parseConfig();

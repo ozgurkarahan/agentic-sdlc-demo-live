@@ -59,6 +59,11 @@ export function createApp(options: CreateAppOptions = {}): Express {
       return;
     }
 
+    if (url.length > config.maxUrlLen) {
+      response.status(400).json({ error: `URL must be at most ${config.maxUrlLen} characters long` });
+      return;
+    }
+
     const code = createUniqueCode(store);
     const record = store.create(code, url);
     response.status(201).json({ code: record.code, shortUrl: `${config.baseUrl}/${record.code}` });
@@ -81,4 +86,3 @@ export function createApp(options: CreateAppOptions = {}): Express {
 
   return app;
 }
-

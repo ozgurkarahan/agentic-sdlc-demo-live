@@ -1,9 +1,9 @@
 {
-  "unit": "U3",
-  "declaredPaths": ["README.md", ".agent/unit.json"],
-  "requiredTest": null,
+  "unit": "U1",
+  "declaredPaths": ["src/app.ts", "src/config.ts", "test/unit/inputValidation.test.ts", ".agent/unit.json"],
+  "requiredTest": "test/unit/inputValidation.test.ts",
   "evals": [],
-  "evalRoute": "/healthz",
-  "evalMax": 3,
-  "evalMethod": "GET"
+  "evalRoute": "/shorten",
+  "evalMax": 2048,
+  "evalMethod": "POST"
 }
