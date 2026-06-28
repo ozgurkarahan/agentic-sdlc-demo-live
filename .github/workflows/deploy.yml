@@ -122,8 +122,21 @@ jobs:
           done
           FQDN="$(az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)"
           echo "STAGING_URL=https://$FQDN/healthz" >> "$GITHUB_ENV"
+          echo "STAGING_BASE=https://$FQDN" >> "$GITHUB_ENV"
       - name: Live smoke (staging)        # layered — retries cover ACA scale-to-zero cold start
         run: node ci/scripts/smoke-check.mjs --url "$STAGING_URL" --retries 15 --delay 4000
+      # R13 post-deploy E2E gate (layered). Planning MANDATES a real-results E2E unit; @copilot AUTHORS
+      # test/e2e/rateLimit.e2e.test.ts; this step WIRES it as a post-deploy gate vs the LIVE staging URL
+      # (after smoke, before promotion). A failing/absent E2E fails deploy-staging => prod untouched.
+      - name: E2E real-results acceptance (live staging URL)
+        run: |
+          if [ -f test/e2e/rateLimit.e2e.test.ts ]; then
+            echo "Running harness-authored E2E against $STAGING_BASE"
+            E2E_BASE_URL="$STAGING_BASE" npx vitest run test/e2e/rateLimit.e2e.test.ts
+          else
+            echo "::error::Planning demanded a real-results E2E unit (test/e2e/rateLimit.e2e.test.ts) but the Dev fleet has not delivered it — refusing to promote without the live acceptance test."
+            exit 1
+          fi
 
   # ── 3. Deploy PRODUCTION by the SAME digest. Environment reviewer pause → 0% canary → shift → rollback. ──
   deploy-production:
