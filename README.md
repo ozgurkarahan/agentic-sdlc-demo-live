@@ -1,5 +1,7 @@
 # URL Shortener Sample App
 
+> NOTE: validated by Loop-3 closed-loop ops.
+
 Node 20 + TypeScript + Express REST API used as the demo system under test.
 
 ## API
