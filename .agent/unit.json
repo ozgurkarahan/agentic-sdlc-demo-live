@@ -1,9 +1,9 @@
 {
-  "unit": "U3",
-  "declaredPaths": ["README.md", ".agent/unit.json"],
-  "requiredTest": null,
-  "evals": [],
-  "evalRoute": "/healthz",
-  "evalMax": 3,
+  "unit": "U4",
+  "declaredPaths": ["test/e2e/rateLimit.e2e.test.ts", ".agent/unit.json"],
+  "requiredTest": "test/e2e/rateLimit.e2e.test.ts",
+  "evals": ["rate-limit-429"],
+  "evalRoute": "/api/links",
+  "evalMax": 100,
   "evalMethod": "GET"
 }
