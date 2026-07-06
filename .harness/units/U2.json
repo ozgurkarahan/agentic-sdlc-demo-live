@@ -1,6 +1,8 @@
 {
   "unit": "U2",
-  "declaredPaths": [
+  "title": "Live-URL E2E real-results acceptance",
+  "status": "complete",
+  "paths": [
     "test/e2e/todos.e2e.test.ts",
     ".agent/unit.json",
     ".harness/units/U2.json"
