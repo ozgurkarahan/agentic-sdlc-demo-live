@@ -77,7 +77,7 @@ function initApp() {
       });
 
       const title = document.createElement('span');
-      title.textContent = todo.title;
+      title.innerHTML = todo.title;
 
       const remove = document.createElement('button');
       remove.type = 'button';
