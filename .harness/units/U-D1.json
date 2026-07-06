@@ -1,6 +1,8 @@
 {
   "unit": "U-D1",
-  "declaredPaths": [
+  "title": "Todo Web UI + Playwright UI-E2E (XSS-safe)",
+  "status": "complete",
+  "paths": [
     "public/index.html",
     "public/app.js",
     "test/e2e-ui/todo-ui.spec.ts",
