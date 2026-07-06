@@ -9,7 +9,7 @@ async function deleteTodoByTitle(page: Page, title: string): Promise<void> {
 }
 
 test('todo UI supports add, toggle, and delete without assuming empty list', async ({ page }) => {
-  const marker = `ui-e2e-${Date.now()}-${randomUUID()}`;
+  const marker = `ui-e2e-${randomUUID()}`;
 
   await page.goto('/');
 
@@ -29,7 +29,7 @@ test('todo UI supports add, toggle, and delete without assuming empty list', asy
 });
 
 test('todo titles are rendered as inert text (xss-safe)', async ({ page }) => {
-  const payload = '<img src=x onerror="window.__xss=1">';
+  const payload = '<img src=x onerror="window.__xss=1;alert(\'xss\')">';
   let dialogTriggered = false;
 
   page.on('dialog', async (dialog) => {
@@ -44,11 +44,9 @@ test('todo titles are rendered as inert text (xss-safe)', async ({ page }) => {
   const item = page.locator('li', { hasText: payload }).first();
   await expect(item).toBeVisible();
   await expect(item.getByText(payload, { exact: true })).toBeVisible();
-  await expect
-    .poll(async () =>
-      page.evaluate(() => (globalThis as typeof globalThis & { __xss?: unknown }).__xss),
-    )
-    .toBeUndefined();
+  await expect.poll(async () =>
+    page.evaluate(() => (globalThis as typeof globalThis & { __xss?: unknown }).__xss),
+  ).toBeUndefined();
   expect(dialogTriggered).toBe(false);
 
   await deleteTodoByTitle(page, payload);
@@ -57,7 +55,7 @@ test('todo titles are rendered as inert text (xss-safe)', async ({ page }) => {
 test('gracefully handles partial failures without crashing (PR-time)', async ({ page }) => {
   test.skip(Boolean(process.env.TEST_BASE_URL), 'route interception is PR-time only');
 
-  const marker = `ui-failure-${Date.now()}-${randomUUID()}`;
+  const marker = `ui-failure-${randomUUID()}`;
   let failedInitialGet = false;
 
   await page.route('**/api/todos', async (route) => {
