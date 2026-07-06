@@ -1,0 +1,13 @@
+{
+  "unit": "U1",
+  "declaredPaths": [
+    "src/app.ts",
+    "src/routes/todos.ts",
+    "src/store/todoStore.ts",
+    "test/unit/todos.test.ts",
+    "README.md",
+    ".agent/unit.json",
+    ".harness/units/U1.json"
+  ],
+  "requiredTest": "test/unit/todos.test.ts"
+}

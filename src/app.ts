@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express, { type Express, type RequestHandler } from 'express';
+import todosRouter from './routes/todos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -20,6 +21,9 @@ export function createApp(options: CreateAppOptions = {}): Express {
   app.get('/healthz', (_request, response) => {
     response.status(200).json({ status: 'ok' });
   });
+
+  // API routes — registered before static/root handlers so /api/* is never shadowed.
+  app.use('/api/todos', todosRouter);
 
   // Serve static UI — registered after all API routes so it never shadows /api/* or /healthz.
   const publicDir = path.join(__dirname, '..', 'public');
