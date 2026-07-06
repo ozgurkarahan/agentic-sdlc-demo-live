@@ -7,14 +7,14 @@
 # real reviewing owner/team when you instantiate the harness into your own repo.
 
 # Default owner for everything in the repo.
-*                    @ozgurkarahan @ozgurkarahan_microsoft
+*                    @ozgurkarahan
 
 # Application source — the system under test.
-/src/                @ozgurkarahan @ozgurkarahan_microsoft
+/src/                @ozgurkarahan
 
 # The governance harness itself (agents, prompts, workflows, issue forms).
-/.github/            @ozgurkarahan @ozgurkarahan_microsoft
+/.github/            @ozgurkarahan
 
 # CI scripts + the orchestrator/dispatcher (the layered 🟦 logic).
-/ci/                 @ozgurkarahan @ozgurkarahan_microsoft
-/orchestrator/       @ozgurkarahan @ozgurkarahan_microsoft
+/ci/                 @ozgurkarahan
+/orchestrator/       @ozgurkarahan
